@@ -3,235 +3,136 @@
 
 #include <stdio.h>
 
-#define P 5  // Number of processes
-#define R 3  // Number of resource types
-
-int main(void)
+int main()
 {
-    int allocation[P][R];  // Resources allocated to each process
-    int max[P][R];         // Maximum resources required
-    int need[P][R];        // Remaining resources needed
-    int available[R];      // Currently available resources
-    int work[R];           // Resources available during safety check
-    int finish[P] = {0};   // 0 = Not finished, 1 = Finished
-    int safeSeq[P];        // Stores safe sequence
-    int completed = 0;     // Counts completed processes
+    // Initialization for Banker's Algorithm
+    int i, j, k;
+    int n, m;
+    int alloc[10][10], max[10][10], need[10][10], avail[10];
+    int count = 0;
+    int found;
+    int finish[10] = {0};
+    int safe[10];
 
-    // Step 1: Input Allocation Matrix
-    printf("Enter Allocation Matrix (%d x %d):\n", P, R);
+    // Input
+    printf("Enter the number of processes:- \n");
+    scanf("%d", &n);
 
-    for (int i = 0; i < P; i++)
+    printf("Enter the number of resources:- \n");
+    scanf("%d", &m);
+
+    printf("Enter the allocation matrix:- \n");
+    for (i = 0; i < n; i++)
     {
-        for (int j = 0; j < R; j++)
+        for (j = 0; j < m; j++)
         {
-            if (scanf("%d", &allocation[i][j]) != 1 ||
-                allocation[i][j] < 0)
-            {
-                printf("Invalid Allocation Matrix.\n");
-                return 1;
-            }
+            scanf("%d", &alloc[i][j]);
         }
     }
 
-    // Step 2: Input Max Matrix
-    printf("Enter Max Matrix (%d x %d):\n", P, R);
-
-    for (int i = 0; i < P; i++)
+    printf("Enter the max matrix:- \n");
+    for (i = 0; i < n; i++)
     {
-        for (int j = 0; j < R; j++)
+        for (j = 0; j < m; j++)
         {
-            if (scanf("%d", &max[i][j]) != 1 ||
-                max[i][j] < allocation[i][j])
-            {
-                printf("Invalid input: Max must be >= Allocation.\n");
-                return 1;
-            }
-
-            // Calculate remaining need
-            // Need = Max - Allocation
-            need[i][j] = max[i][j] - allocation[i][j];
+            scanf("%d", &max[i][j]);
         }
     }
 
-    // Step 3: Input Available Resources
-    printf("Enter Available Resources (%d values):\n", R);
-
-    for (int j = 0; j < R; j++)
+    printf("Enter the available resources:- \n");
+    for (i = 0; i < m; i++)
     {
-        if (scanf("%d", &available[j]) != 1 ||
-            available[j] < 0)
+        scanf("%d", &avail[i]);
+    }
+
+    // Calculate need matrix
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < m; j++)
         {
-            printf("Invalid Available Resources.\n");
-            return 1;
+            need[i][j] = max[i][j] - alloc[i][j];
         }
-
-        // Copy available resources into work
-        work[j] = available[j];
     }
 
-    // Step 4: Display Available Resources
-    printf("\nInitial Available Resources: ");
-
-    for (int j = 0; j < R; j++)
+    // Display need matrix
+    printf("Need matrix:\n");
+    for (i = 0; i < n; i++)
     {
-        printf("%d ", available[j]);
-    }
-
-    printf("\n");
-
-    // Step 5: Display Initial Work
-    printf("Initial Work: ");
-
-    for (int j = 0; j < R; j++)
-    {
-        printf("%d ", work[j]);
-    }
-
-    printf("\n");
-
-    // Step 6: Display Need Matrix
-    printf("\nNeed Matrix:\n");
-
-    for (int i = 0; i < P; i++)
-    {
-        printf("P%d: ", i);
-
-        for (int j = 0; j < R; j++)
+        for (j = 0; j < m; j++)
         {
             printf("%d ", need[i][j]);
         }
-
         printf("\n");
     }
 
-    // Step 7: Banker's Safety Algorithm
-    printf("\n--- Safety Algorithm Execution ---\n");
-
-    // Continue until all processes finish
-    while (completed < P)
+    // Find safe sequence
+    while (count < n)
     {
-        int found = 0;  // Checks if any process can execute
+        found = 0;
 
-        for (int i = 0; i < P; i++)
+        for (i = 0; i < n; i++)
         {
-            // Check only unfinished processes
             if (finish[i] == 0)
             {
-                int canExecute = 1;
-
-                // Check if Need <= Work
-                for (int j = 0; j < R; j++)
+                // Check if process can execute
+                for (j = 0; j < m; j++)
                 {
-                    if (need[i][j] > work[j])
+                    if (need[i][j] > avail[j])
                     {
-                        // Not enough resources
-                        canExecute = 0;
                         break;
                     }
                 }
 
-                // Execute process if resources are sufficient
-                if (canExecute)
+                if (j == m)
                 {
-                    printf("\nP%d can execute.\n", i);
-
-                    // Display work before execution
-                    printf("Work before P%d: ", i);
-
-                    for (int j = 0; j < R; j++)
+                    // Process can finish
+                    for (k = 0; k < m; k++)
                     {
-                        printf("%d ", work[j]);
+                        avail[k] += alloc[i][k];
                     }
 
-                    printf("\n");
-
-                    // Display resources released by process
-                    printf("P%d releases Allocation: ", i);
-
-                    for (int j = 0; j < R; j++)
-                    {
-                        printf("%d ", allocation[i][j]);
-                    }
-
-                    printf("\n");
-
-                    // Process finishes and releases resources
-                    // Work = Work + Allocation
-                    for (int j = 0; j < R; j++)
-                    {
-                        work[j] += allocation[i][j];
-                    }
-
-                    // Display updated work
-                    printf("Work after P%d: ", i);
-
-                    for (int j = 0; j < R; j++)
-                    {
-                        printf("%d ", work[j]);
-                    }
-
-                    printf("\n");
-
-                    // Mark process as completed
+                    safe[count++] = i;
                     finish[i] = 1;
-
-                    // Add process to safe sequence
-                    safeSeq[completed] = i;
-
-                    // Increase completed process count
-                    completed++;
-
-                    // At least one process executed
                     found = 1;
-
-                    // Display Finish array
-                    printf("Finish array: ");
-
-                    for (int k = 0; k < P; k++)
-                    {
-                        printf("%d ", finish[k]);
-                    }
-
-                    printf("\n");
                 }
             }
         }
 
-        // Stop if no process can execute
         if (found == 0)
         {
-            break;
+            printf("Safe sequence cannot be made, deadlock is possible.\n");
+            return 0;
         }
     }
 
-    // Step 8: Display Final Result
-    printf("\n--- Final Result ---\n");
-
-    // If all processes finish, system is safe
-    if (completed == P)
+    // Display safe sequence
+    printf("Safe sequence:\n");
+    for (k = 0; k < n; k++)
     {
-        printf("System is in SAFE STATE.\n");
-        printf("Safe Sequence: ");
-
-        for (int i = 0; i < P; i++)
-        {
-            printf("P%d", safeSeq[i]);
-
-            // Print arrow between processes
-            if (i < P - 1)
-            {
-                printf(" -> ");
-            }
-        }
-
-        printf("\n");
-    }
-    else
-    {
-        // If some processes cannot finish, system is unsafe
-        printf("System is in an UNSAFE STATE.\n");
-        printf("No safe sequence exists for the given state.\n");
+        printf("P%d\n", safe[k]);
     }
 
     return 0;
 }
+
+
+// terminal 
+// gcc bankers.c -o bankers
+// ./bankers
+
+// inputs
+5
+3
+0 1 0
+2 0 0
+3 0 2
+2 1 1
+0 0 2
+    
+7 5 3
+3 2 2
+9 0 2
+2 2 2
+4 3 3
+    
+3 3 2
