@@ -136,3 +136,7 @@ int main()
 4 3 3
     
 3 3 2
+// now 3 3 2 is our that a b c wala shit ok \
+    // create table and in remaingin (4th collumn) do cal of max - Allocation \
+    // 3 3 2  zhalya war te p2 madhe 2 0 0 add kar if max need satisfies or not means \
+    // jar ka p2 cha satisfy zhala (max need) the add the availabale madhe p2 cha allcated ok?
